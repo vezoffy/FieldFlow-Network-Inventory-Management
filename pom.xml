@@ -26,7 +26,8 @@
         <module>auth_service</module>
         <module>inventory-service</module>
         <module>customer-service</module>
-        <module>network-topology-service</module> <!-- Added new module -->
+        <module>network-topology-service</module>
+        <module>deployment-service</module>
     </modules>
 
     <dependencyManagement>
