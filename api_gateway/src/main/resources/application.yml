@@ -60,6 +60,18 @@ spring:
           predicates:
             - Path=/network-topology-service/v3/api-docs/**,/network-topology-service/swagger
 
+        # Deployment Service Routes
+        - id: deployment-service
+          uri: lb://deployment-service
+          predicates:
+            - Path=/api/deployments/** # Corrected: added 's' to deployments
+          filters:
+            - name: JwtAuthentication
+        - id: deployment-service-swagger
+          uri: lb://deployment-service
+          predicates:
+              - Path=/deployment-service/v3/api-docs/**,/deployment-service/swagger-ui
+
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Headers, RETAIN_UNIQUE
 
@@ -91,7 +103,8 @@ springdoc:
         url: /customer-service/v3/api-docs
       - name: network-topology-service
         url: /network-topology-service/v3/api-docs
-
+      - name: deployment-service
+        url: /deployment-service/v3/api-docs
 
 jwt:
   secret: my-super-secret-key-that-is-long-enough-to-be-secure

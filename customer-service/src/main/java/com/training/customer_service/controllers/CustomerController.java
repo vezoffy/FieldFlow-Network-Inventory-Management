@@ -3,7 +3,8 @@ package com.training.customer_service.controllers;
 import com.training.customer_service.dtos.*;
 import com.training.customer_service.dtos.feign.AssetResponse;
 import com.training.customer_service.enums.CustomerStatus;
-import com.training.customer_service.services.CustomerService;
+
+import com.training.customer_service.service.CustomerService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -1,7 +1,11 @@
-package com.training.customer_service.services;
+package com.training.customer_service.service;
 
 import com.training.customer_service.clients.InventoryServiceProxy;
-import com.training.customer_service.dtos.*;
+
+import com.training.customer_service.dtos.CustomerAssignmentDto;
+import com.training.customer_service.dtos.CustomerAssignmentRequest;
+import com.training.customer_service.dtos.CustomerCreateRequest;
+import com.training.customer_service.dtos.CustomerResponse;
 import com.training.customer_service.dtos.feign.AssetDetailDto;
 import com.training.customer_service.dtos.feign.AssetResponse;
 import com.training.customer_service.dtos.feign.SplitterDto;
@@ -13,13 +17,13 @@ import com.training.customer_service.enums.FiberStatus;
 import com.training.customer_service.exceptions.CustomerNotFoundException;
 import com.training.customer_service.exceptions.InvalidPortAssignmentException;
 import com.training.customer_service.exceptions.InventoryServiceException;
+
 import com.training.customer_service.repositories.CustomerRepository;
 import com.training.customer_service.repositories.FiberDropLineRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -84,12 +88,14 @@ public class CustomerService {
     }
 
     @Transactional
-    public CustomerResponse deactivateCustomer(Long id) {
+    public void updateCustomerStatus(Long id, String status) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + id + " not found."));
 
-        // If customer was assigned to a splitter, decrement used ports
-        if (customer.getSplitterId() != null) {
+        CustomerStatus newStatus = CustomerStatus.valueOf(status.toUpperCase());
+
+        // If deactivating, decrement used ports
+        if (customer.getStatus() == CustomerStatus.ACTIVE && newStatus == CustomerStatus.INACTIVE && customer.getSplitterId() != null) {
             try {
                 SplitterDto splitter = inventoryServiceProxy.getSplitterDetails(customer.getSplitterId());
                 if (splitter.getUsedPorts() > 0) {
@@ -98,14 +104,12 @@ public class CustomerService {
                     inventoryServiceProxy.updateSplitterUsedPorts(splitter.getId(), updateRequest);
                 }
             } catch (Exception e) {
-                // Log the error but don't prevent customer deactivation
                 System.err.println("Failed to decrement splitter used ports for splitter ID " + customer.getSplitterId() + ": " + e.getMessage());
             }
         }
 
-        customer.setStatus(CustomerStatus.INACTIVE);
-        Customer updatedCustomer = customerRepository.save(customer);
-        return mapToCustomerResponse(updatedCustomer, Collections.emptyList());
+        customer.setStatus(newStatus);
+        customerRepository.save(customer);
     }
 
     @Transactional
@@ -119,7 +123,6 @@ public class CustomerService {
 
         AssetResponse splitterAsset = inventoryServiceProxy.getAssetBySerial(assignment.splitterSerialNumber());
 
-        // Check if port is already in use (local check)
         boolean portInUse = customerRepository.findAll().stream()
                 .anyMatch(c -> c.getSplitterId() != null && c.getSplitterId().equals(splitterAsset.getId()) &&
                               c.getAssignedPort() != null && c.getAssignedPort().equals(assignment.portNumber()) &&
@@ -129,7 +132,6 @@ public class CustomerService {
             throw new InvalidPortAssignmentException("Port " + assignment.portNumber() + " on splitter " + assignment.splitterSerialNumber() + " is already in use.");
         }
 
-        // Update splitter used ports in inventory-service
         try {
             SplitterDto splitter = inventoryServiceProxy.getSplitterDetails(splitterAsset.getId());
             if (splitter.getUsedPorts() >= splitter.getPortCapacity()) {
@@ -181,6 +183,31 @@ public class CustomerService {
         return customerRepository.findBySplitterId(splitterId).stream()
                 .map(this::toCustomerAssignmentDto)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CustomerResponse deactivateCustomer(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + id + " not found."));
+
+        // If customer was assigned to a splitter, decrement used ports
+        if (customer.getSplitterId() != null) {
+            try {
+                SplitterDto splitter = inventoryServiceProxy.getSplitterDetails(customer.getSplitterId());
+                if (splitter.getUsedPorts() > 0) {
+                    SplitterUpdateRequest updateRequest = new SplitterUpdateRequest();
+                    updateRequest.setUsedPorts(splitter.getUsedPorts() - 1);
+                    inventoryServiceProxy.updateSplitterUsedPorts(splitter.getId(), updateRequest);
+                }
+            } catch (Exception e) {
+                // Log the error but don't prevent customer deactivation
+                System.err.println("Failed to decrement splitter used ports for splitter ID " + customer.getSplitterId() + ": " + e.getMessage());
+            }
+        }
+
+        customer.setStatus(CustomerStatus.INACTIVE);
+        Customer updatedCustomer = customerRepository.save(customer);
+        return mapToCustomerResponse(updatedCustomer, Collections.emptyList());
     }
 
     private CustomerAssignmentDto toCustomerAssignmentDto(Customer customer) {
