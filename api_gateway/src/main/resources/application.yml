@@ -1,0 +1,97 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Use the new, correct path for discovery locator settings
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+      routes:
+        # Auth Service Routes
+        - id: auth-service-api
+          uri: lb://auth-micro-service
+          predicates:
+            - Path=/api/auth/**
+        - id: auth-service-swagger
+          uri: lb://auth-micro-service
+          predicates:
+            - Path=/auth-service/v3/api-docs/**,/auth-service/swagger-ui/**,/auth-service/swagger-ui.html
+
+        # Inventory Service Routes
+        - id: inventory-service-api
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - name: JwtAuthentication
+        - id: inventory-service-swagger
+          uri: lb://inventory-service
+          predicates:
+            - Path=/inventory-service/v3/api-docs/**,/inventory-service/swagger-ui/**,/inventory-service/swagger-ui.html
+
+        # Customer Service Routes
+        - id: customer-service-api
+          uri: lb://customer-service
+          predicates:
+            - Path=/api/customers/**
+          filters:
+            - name: JwtAuthentication
+        - id: customer-service-swagger
+          uri: lb://customer-service
+          predicates:
+            - Path=/customer-service/v3/api-docs/**,/customer-service/swagger-ui/**,/customer-service/swagger-ui.html
+
+        # Network-Topology Service Routes
+        - id: network-topology-service
+          uri: lb://network-topology-service
+          predicates:
+              - Path=/api/topology/**
+          filters:
+              - name: JwtAuthentication
+        - id: network-topology-service-swagger
+          uri: lb://network-topology-service
+          predicates:
+            - Path=/network-topology-service/v3/api-docs/**,/network-topology-service/swagger
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Headers, RETAIN_UNIQUE
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  gateway:
+    enabled: true
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    urls:
+      - name: auth-micro-service
+        url: /auth-service/v3/api-docs
+      - name: inventory-service
+        url: /inventory-service/v3/api-docs
+      - name: customer-service
+        url: /customer-service/v3/api-docs
+      - name: network-topology-service
+        url: /network-topology-service/v3/api-docs
+
+
+jwt:
+  secret: my-super-secret-key-that-is-long-enough-to-be-secure

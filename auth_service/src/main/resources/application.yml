@@ -1,0 +1,31 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: auth-micro-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/auth_db?createDatabaseIfNotExist=true
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: my-super-secret-key-that-is-long-enough-to-be-secure
+  expirationMs: 3600000 # 1 hour
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG

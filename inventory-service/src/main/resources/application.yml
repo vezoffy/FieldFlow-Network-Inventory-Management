@@ -1,0 +1,30 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: inventory-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/inventory_db?createDatabaseIfNotExist=true
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: my-super-secret-key-that-is-long-enough-to-be-secure
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
