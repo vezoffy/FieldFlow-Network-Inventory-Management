@@ -1,12 +1,11 @@
 package com.training.customer_service.clients;
 
 import com.training.customer_service.dtos.feign.AssetAssignRequest;
-import com.training.customer_service.dtos.feign.AssetResponse;
-import com.training.customer_service.dtos.feign.SplitterDto;
-import com.training.customer_service.dtos.feign.SplitterUpdateRequest;
+import com.training.customer_service.dtos.AssetResponse;
+import com.training.customer_service.dtos.SplitterDto;
+import com.training.customer_service.dtos.SplitterUpdateRequest;
 import com.training.customer_service.exceptions.InventoryServiceException;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;

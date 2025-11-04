@@ -32,7 +32,10 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String errorMessage = "An unexpected error occurred";
 
-        if (ex instanceof CustomerInactiveException) {
+        if (ex instanceof DeviceNotAssignedException) {
+            status = HttpStatus.NOT_FOUND;
+            errorMessage = ex.getMessage();
+        } else if (ex instanceof CustomerInactiveException) {
             status = HttpStatus.NOT_FOUND;
             errorMessage = ex.getMessage();
         } else if (ex instanceof TopologyServiceException) {

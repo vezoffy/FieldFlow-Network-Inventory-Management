@@ -1,15 +1,11 @@
 package com.training.customer_service.service;
 
 import com.training.customer_service.clients.InventoryServiceProxy;
-import com.training.customer_service.dto.*;
-import com.training.customer_service.dtos.CustomerAssignmentDto;
-import com.training.customer_service.dtos.CustomerAssignmentRequest;
-import com.training.customer_service.dtos.CustomerCreateRequest;
-import com.training.customer_service.dtos.CustomerResponse;
-import com.training.customer_service.dtos.feign.AssetDetailDto;
-import com.training.customer_service.dtos.feign.AssetResponse;
-import com.training.customer_service.dtos.feign.SplitterDto;
-import com.training.customer_service.dtos.feign.SplitterUpdateRequest;
+import com.training.customer_service.dtos.*;
+import com.training.customer_service.dtos.AssetDetailDto;
+import com.training.customer_service.dtos.AssetResponse;
+import com.training.customer_service.dtos.SplitterDto;
+import com.training.customer_service.dtos.SplitterUpdateRequest;
 import com.training.customer_service.entities.Customer;
 import com.training.customer_service.entities.FiberDropLine;
 import com.training.customer_service.enums.CustomerStatus;
@@ -43,6 +39,12 @@ public class CustomerService {
 
     @Autowired
     private InventoryServiceProxy inventoryServiceProxy;
+
+    public List<CustomerResponse> getAllCustomers() {
+        return customerRepository.findAll().stream()
+                .map(customer -> mapToCustomerResponse(customer, inventoryServiceProxy.getAssetsByCustomerId(customer.getId())))
+                .collect(Collectors.toList());
+    }
 
     public List<FiberDropLine> getFiberDropLinesBySplitter(Long splitterId) {
         return fiberDropLineRepository.findByFromSplitterId(splitterId);
@@ -186,7 +188,7 @@ public class CustomerService {
         FiberDropLine fiberLine = existingLine.orElse(new FiberDropLine());
         fiberLine.setCustomerId(customerId);
         fiberLine.setFromSplitterId(splitterAsset.getId());
-        fiberLine.setLengthMeters(assignment.lengthMeters()); // Corrected line
+        fiberLine.setLengthMeters(assignment.lengthMeters());
         fiberLine.setStatus(FiberStatus.ACTIVE);
         fiberDropLineRepository.save(fiberLine);
 

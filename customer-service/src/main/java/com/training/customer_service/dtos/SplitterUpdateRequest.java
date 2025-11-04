@@ -1,4 +1,4 @@
-package com.training.customer_service.dtos.feign;
+package com.training.customer_service.dtos;
 
 import lombok.Data;
 

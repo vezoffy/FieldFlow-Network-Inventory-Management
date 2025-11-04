@@ -1,6 +1,5 @@
 package com.training.customer_service.dtos;
 
-import com.training.customer_service.dtos.feign.AssetDetailDto;
 import lombok.Data;
 
 import java.util.List;

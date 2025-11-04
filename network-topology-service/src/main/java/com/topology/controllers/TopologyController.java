@@ -5,6 +5,7 @@ import com.topology.dto.FdhTopologyResponse;
 import com.topology.dto.HeadendTopologyDto;
 import com.topology.services.TopologyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,29 +20,35 @@ public class TopologyController {
     @Autowired
     private TopologyService topologyService;
 
-    @GetMapping("/headend/{headendId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER', 'SUPPORT_AGENT')")
-    public Mono<HeadendTopologyDto> getHeadendTopology(@PathVariable Long headendId) {
-        return topologyService.getHeadendTopology(headendId);
+    @GetMapping("/customer/{customerId}")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<ResponseEntity<CustomerPathResponse>> traceCustomerPath(@PathVariable Long customerId) {
+        return topologyService.traceCustomerPath(customerId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    // This endpoint now returns the specific hierarchical path for a customer
-    @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER', 'SUPPORT_AGENT')")
-    public Mono<CustomerPathResponse> getCustomerTopology(@PathVariable Long customerId) {
-        return topologyService.traceCustomerPath(customerId);
+    @GetMapping("/device/{serialNumber}")
+    @PreAuthorize("isAuthenticated()")
+    public Mono<ResponseEntity<Object>> traceDevice(@PathVariable String serialNumber) {
+        return topologyService.traceDevicePath(serialNumber)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/fdh/{fdhId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER')")
-    public Mono<FdhTopologyResponse> getFdhTopology(@PathVariable Long fdhId) {
-        return topologyService.getFdhTopology(fdhId);
+    public Mono<ResponseEntity<FdhTopologyResponse>> getFdhTopology(@PathVariable Long fdhId) {
+        return topologyService.getFdhTopology(fdhId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    // This endpoint now also returns the specific hierarchical path for the customer assigned to the device
-    @GetMapping("/search/device/{serial}")
-    @PreAuthorize("isAuthenticated()")
-    public Mono<CustomerPathResponse> traceDevicePath(@PathVariable String serial) {
-        return topologyService.traceDevicePath(serial);
+    @GetMapping("/headend/{headendId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER')")
+    public Mono<ResponseEntity<HeadendTopologyDto>> getHeadendTopology(@PathVariable Long headendId) {
+        return topologyService.getHeadendTopology(headendId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }

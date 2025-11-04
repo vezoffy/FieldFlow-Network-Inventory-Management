@@ -1,6 +1,6 @@
 package com.training.customer_service.controllers;
 
-import com.training.customer_service.dto.FiberDropLineResponse;
+import com.training.customer_service.dtos.FiberDropLineResponse;
 import com.training.customer_service.entities.FiberDropLine;
 import com.training.customer_service.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;

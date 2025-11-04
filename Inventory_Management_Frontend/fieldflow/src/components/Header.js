@@ -17,6 +17,8 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import BuildIcon from '@mui/icons-material/Build';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -122,11 +124,19 @@ const Header = () => {
                 {(user.roles?.includes('ROLE_PLANNER') || user.roles?.includes('ROLE_ADMIN') || user.roles?.includes('ROLE_SUPPORT_AGENT')) && (
                   <MenuItem component={RouterLink} to="/inventory" onClick={handleClose}>
                     <ListItemIcon>
-                      <AdminPanelSettingsIcon fontSize="small" />
+                      <Inventory2Icon fontSize="small" />
                     </ListItemIcon>
                     Inventory
                   </MenuItem>
                 )}
+
+                {/* Network Topology - visible to all logged in users */}
+                <MenuItem component={RouterLink} to="/topology" onClick={handleClose}>
+                  <ListItemIcon>
+                    <AccountTreeIcon fontSize="small" />
+                  </ListItemIcon>
+                  Network Topology
+                </MenuItem>
 
                 <MenuItem
                   onClick={() => {

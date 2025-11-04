@@ -21,7 +21,6 @@ public class DeploymentIntegrationController {
         return ResponseEntity.ok().build();
     }
 
-    // Inner DTO for the request body
     @Data
     private static class CustomerStatusUpdateRequest {
         private String status;

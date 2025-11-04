@@ -1,6 +1,5 @@
 package com.training.customer_service.dtos;
 
-import com.training.customer_service.dtos.feign.AssetResponse;
 import com.training.customer_service.enums.ConnectionType;
 import com.training.customer_service.enums.CustomerStatus;
 import lombok.Getter;

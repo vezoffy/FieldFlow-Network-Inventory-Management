@@ -5,6 +5,7 @@ import com.topology.clients.InventoryClient;
 import com.topology.dto.*;
 import com.topology.enums.AssetType;
 import com.topology.exceptions.CustomerInactiveException;
+import com.topology.exceptions.DeviceNotAssignedException;
 import com.topology.exceptions.InfrastructureDeviceException;
 import com.topology.exceptions.TopologyServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +29,10 @@ public class TopologyService {
     public Mono<CustomerPathResponse> traceCustomerPath(Long customerId) {
         return customerClient.getCustomerAssignment(customerId)
                 .flatMap(customer -> {
-                    // Check if the customer is inactive
                     if (!"ACTIVE".equalsIgnoreCase(customer.getStatus())) {
                         return Mono.error(new CustomerInactiveException("Customer with ID " + customerId + " is not active and has no assigned network path."));
                     }
 
-                    // Proceed with building the path if the customer is active
                     return inventoryClient.getSplitterDetails(customer.getSplitterId())
                             .flatMap(splitter -> inventoryClient.getFdhDetails(splitter.getFdhId())
                                     .flatMap(fdh -> inventoryClient.getCoreSwitchDetails(fdh.getCoreSwitchId())
@@ -68,8 +67,6 @@ public class TopologyService {
                             );
                 });
     }
-
-    // ... (other methods remain the same) ...
 
     public Mono<FdhTopologyResponse> getFdhTopology(Long fdhId) {
         Mono<FdhDto> fdhMono = inventoryClient.getFdhDetails(fdhId);
@@ -121,16 +118,25 @@ public class TopologyService {
                 });
     }
 
-    public Mono<CustomerPathResponse> traceDevicePath(String serialNumber) {
+    public Mono<Object> traceDevicePath(String serialNumber) {
         return inventoryClient.getAssetAssignmentDetails(serialNumber)
                 .flatMap(assignment -> {
-                    if (assignment.getCustomerId() != null) {
-                        return traceCustomerPath(assignment.getCustomerId());
+                    if (assignment == null) {
+                        return Mono.error(new DeviceNotAssignedException("Device with serial number '" + serialNumber + "' not found."));
                     }
-                    return Mono.error(new InfrastructureDeviceException(
-                            "The device with serial number '" + serialNumber + "' is an infrastructure device (" +
-                                    assignment.getAssetType() + "). Use the /api/topology/infrastructure/{serialNumber} endpoint instead."
-                    ));
+
+                    // If it's a customer-facing device, trace the customer path
+                    if (assignment.getCustomerId() != null) {
+                        return traceCustomerPath(assignment.getCustomerId()).cast(Object.class);
+                    }
+
+                    // If it's an infrastructure device, trace the infrastructure path
+                    if (assignment.getAssetType() != AssetType.ONT && assignment.getAssetType() != AssetType.ROUTER) {
+                        return traceInfrastructurePath(serialNumber).cast(Object.class);
+                    }
+
+                    // If it's an unassigned ONT or Router
+                    return Mono.error(new DeviceNotAssignedException("Device with serial number '" + serialNumber + "' is not assigned to any customer."));
                 });
     }
 
