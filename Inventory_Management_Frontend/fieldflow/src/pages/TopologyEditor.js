@@ -15,6 +15,7 @@ const deviceTypes = [
 const TopologyEditor = () => {
   const { user } = useContext(AuthContext);
   const isAdmin = user?.roles?.includes('ROLE_ADMIN');
+  const canAccess = isAdmin || user?.roles?.includes('ROLE_PLANNER');
 
   const [deviceType, setDeviceType] = useState('CORE_SWITCH');
 
@@ -30,7 +31,7 @@ const TopologyEditor = () => {
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'info' });
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canAccess) return;
     // load children for initial deviceType
     loadChildOptions(deviceType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -89,11 +90,11 @@ const TopologyEditor = () => {
     }
   };
 
-  if (!isAdmin) return (
+  if (!canAccess) return (
     <>
       <Header />
       <Container sx={{ pt: 12 }}>
-        <Typography variant="h6">You do not have permission to view the Topology Editor. Admins only.</Typography>
+        <Typography variant="h6">You do not have permission to view the Topology Editor. Admins or Planners only.</Typography>
       </Container>
     </>
   );

@@ -29,7 +29,7 @@ const CustomerDashboard = () => {
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'info' });
 
   const canCreate = user?.roles?.includes('ROLE_PLANNER') || user?.roles?.includes('ROLE_ADMIN');
-  const canViewAll = user?.roles?.includes('ROLE_PLANNER') || user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_SUPPORT_AGENT');
+  const canViewAll = user?.roles?.includes('ROLE_PLANNER') || user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_SUPPORT_AGENT') || user?.roles?.includes('ROLE_TECHNICIAN');
   const isAdmin = user?.roles?.includes('ROLE_ADMIN');
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import com.topology.dto.CustomerPathResponse;
 import com.topology.dto.FdhTopologyResponse;
 import com.topology.dto.HeadendTopologyDto;
 import com.topology.services.TopologyService;
+import com.topology.services.TopologyServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,8 +18,12 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/topology")
 public class TopologyController {
 
+    private final TopologyServiceInterface topologyService;
+
     @Autowired
-    private TopologyService topologyService;
+    public TopologyController(TopologyService topologyService) {
+        this.topologyService = topologyService;
+    }
 
     @GetMapping("/customer/{customerId}")
     @PreAuthorize("isAuthenticated()")

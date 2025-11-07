@@ -3,6 +3,7 @@ package com.training.customer_service.controllers;
 import com.training.customer_service.dtos.FiberDropLineResponse;
 import com.training.customer_service.entities.FiberDropLine;
 import com.training.customer_service.service.CustomerService;
+import com.training.customer_service.service.CustomerServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,8 +18,12 @@ import java.util.List;
 @RequestMapping("/api/customers/fiber-drop-lines")
 public class FiberDropLineController {
 
+    private final CustomerServiceInterface customerService;
+
     @Autowired
-    private CustomerService customerService;
+    public FiberDropLineController(CustomerService customerService) {
+        this.customerService = customerService;
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER', 'TECHNICIAN')")

@@ -11,10 +11,14 @@ import java.time.Instant;
 import java.util.List;
 
 @Service
-public class AuditLogService {
+public class AuditLogService implements AuditLogServiceInterface {
+
+    private final AuditLogRepository auditLogRepository;
 
     @Autowired
-    private AuditLogRepository auditLogRepository;
+    public AuditLogService(AuditLogRepository auditLogRepository) {
+        this.auditLogRepository = auditLogRepository;
+    }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logAction(String userId, String actionType, String description) {

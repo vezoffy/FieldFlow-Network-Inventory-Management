@@ -122,6 +122,22 @@ const inventoryService = {
     const resp = await api.put(`/api/inventory/assets/${id}`, body);
     return resp.data;
   },
+  unassignBySerial: async (serialNumber) => {
+    const resp = await api.post(`/api/inventory/assets/unassign/by-serial/${encodeURIComponent(serialNumber)}`);
+    return resp.data;
+  },
+  getFaultyAssigned: async () => {
+    const resp = await api.get('/api/inventory/assets/faulty-assigned');
+    return resp.data;
+  },
+  replaceAsset: async (faultySerial, newSerial) => {
+    const body = {
+      faultyAssetSerialNumber: faultySerial,
+      newAssetSerialNumber: newSerial,
+    };
+    const resp = await api.post('/api/inventory/assets/replace', body);
+    return resp.data;
+  },
   deleteAsset: async (id) => {
     const resp = await api.delete(`/api/inventory/assets/by-id/${id}`);
     return resp;

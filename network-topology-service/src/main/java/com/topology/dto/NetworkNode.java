@@ -1,12 +1,11 @@
 package com.topology.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor; // Added NoArgsConstructor for flexibility
+import lombok.*;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor // Added for easier deserialization and construction
 public class NetworkNode {

@@ -2,7 +2,7 @@ package com.training.customer_service.controllers;
 
 import com.training.customer_service.dtos.*;
 import com.training.customer_service.enums.CustomerStatus;
-import com.training.customer_service.service.CustomerService;
+import com.training.customer_service.service.CustomerServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +15,12 @@ import java.util.List;
 @RequestMapping("/api/customers")
 public class CustomerController {
 
+    private final CustomerServiceInterface customerService;
+
     @Autowired
-    private CustomerService customerService;
+    public CustomerController(CustomerServiceInterface customerServiceInterface) {
+        this.customerService= customerServiceInterface;
+    }
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER', 'SUPPORT_AGENT')")
@@ -38,14 +42,14 @@ public class CustomerController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/assign-port") // Standardized to {id}
+    @PatchMapping("/{id}/assign-port")
     @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER')")
     public ResponseEntity<CustomerResponse> assignSplitterPort(@PathVariable Long id, @RequestBody CustomerAssignmentRequest assignment) {
         CustomerResponse customer = customerService.assignSplitterPort(id, assignment);
         return ResponseEntity.ok(customer);
     }
 
-    @PatchMapping("/{id}/reassign-port") // Standardized to {id}
+    @PatchMapping("/{id}/reassign-port")
     @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER')")
     public ResponseEntity<CustomerResponse> reassignSplitterPort(@PathVariable Long id, @RequestBody CustomerAssignmentRequest assignment) {
         CustomerResponse customer = customerService.reassignSplitterPort(id, assignment);
@@ -80,7 +84,7 @@ public class CustomerController {
         return ResponseEntity.ok(customer);
     }
 
-    @PostMapping("/{id}/assign-asset") // Standardized to {id}
+    @PostMapping("/{id}/assign-asset")
     @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER', 'TECHNICIAN')")
     public ResponseEntity<AssetResponse> assignAssetToCustomer(@PathVariable Long id, @RequestBody AssetAssignRequest request) {
         AssetResponse asset = customerService.assignAssetToCustomer(id, request.getAssetSerialNumber());

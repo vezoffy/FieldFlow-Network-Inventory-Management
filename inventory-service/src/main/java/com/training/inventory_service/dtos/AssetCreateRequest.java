@@ -2,9 +2,11 @@ package com.training.inventory_service.dtos;
 
 import com.training.inventory_service.enums.AssetType;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class AssetCreateRequest {
 
     @NotNull(message = "Asset type cannot be null")

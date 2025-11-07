@@ -1,9 +1,11 @@
 package com.training.inventory_service.dtos;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class AssetAssignRequest {
     @NotNull
     private Long customerId;

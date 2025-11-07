@@ -12,33 +12,52 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class NetworkHierarchyService {
+public class NetworkHierarchyService implements NetworkHierarchyServiceInterface {
 
-    private static final Logger logger = LoggerFactory.getLogger(NetworkHierarchyService.class);
+    // --- Sonar: Constants for repeated strings (S1192) ---
+    private static final String ASSET_NOT_FOUND_ID = "Asset not found with ID: %d";
+    private static final String HEADEND_NOT_FOUND_ID = "Headend not found with ID: %d";
+    private static final String CORE_SWITCH_NOT_FOUND_ID = "Core Switch not found with ID: %d";
+    private static final String FDH_NOT_FOUND_ID = "FDH not found with ID: %d";
+    private static final String SPLITTER_NOT_FOUND_ID = "Splitter not found with ID: %d";
+
+    private static final String HEADEND_DETAILS_NOT_FOUND = "Headend details not found";
+    private static final String CORE_SWITCH_DETAILS_NOT_FOUND = "Core Switch details not found";
+    private static final String FDH_DETAILS_NOT_FOUND = "FDH details not found";
+    private static final String SPLITTER_DETAILS_NOT_FOUND = "Splitter details not found";
+    private static final String SPLITTER_NOT_FOUND = "Splitter not found";
+
+    private static final String ASSET_CREATE_HIERARCHY_FAIL = "Failed to create asset during hierarchy setup";
+    private static final String MODEL_INFRASTRUCTURE = "Infrastructure";
+    private static final String MODEL_CORE_INFRASTRUCTURE = "Core Infrastructure";
+
+    private final AssetRepository assetRepository;
+    private final HeadendRepository headendRepository;
+    private final FdhRepository fdhRepository;
+    private final SplitterRepository splitterRepository;
+    private final CoreSwitchRepository coreSwitchRepository;
+    private final AssetServiceInterface assetService;
 
     @Autowired
-    private AssetRepository assetRepository;
-    @Autowired
-    private HeadendRepository headendRepository;
-    @Autowired
-    private FdhRepository fdhRepository;
-    @Autowired
-    private SplitterRepository splitterRepository;
-    @Autowired
-    private CoreSwitchRepository coreSwitchRepository;
-    @Autowired
-    private AssetService assetService;
-
-    // ... (List All and Reparenting Methods) ...
+    public NetworkHierarchyService(AssetRepository assetRepository, HeadendRepository headendRepository, FdhRepository fdhRepository, SplitterRepository splitterRepository, CoreSwitchRepository coreSwitchRepository, AssetServiceInterface assetService) {
+        this.assetRepository = assetRepository;
+        this.headendRepository = headendRepository;
+        this.fdhRepository = fdhRepository;
+        this.splitterRepository = splitterRepository;
+        this.coreSwitchRepository = coreSwitchRepository;
+        this.assetService = assetService;
+    }
 
     @Transactional
     public Object updateAsset(Long assetId, AssetUpdateRequest request) {
         Asset asset = assetRepository.findById(assetId)
-                .orElseThrow(() -> new AssetNotFoundException("Asset not found with ID: " + assetId));
+                .orElseThrow(() -> new AssetNotFoundException(String.format(ASSET_NOT_FOUND_ID, assetId)));
 
         // Update common asset fields
         if (request.getLocation() != null) asset.setLocation(request.getLocation());
@@ -48,156 +67,138 @@ public class NetworkHierarchyService {
         // Update specific infrastructure fields
         switch (asset.getAssetType()) {
             case HEADEND:
-                Headend headend = headendRepository.findByAssetId(assetId).orElseThrow(() -> new AssetNotFoundException("Headend details not found"));
+                Headend headend = headendRepository.findByAssetId(assetId).orElseThrow(() -> new AssetNotFoundException(HEADEND_DETAILS_NOT_FOUND));
                 if (request.getName() != null) headend.setName(request.getName());
                 return toHeadendDto(headendRepository.save(headend));
             case CORE_SWITCH:
-                CoreSwitch coreSwitch = coreSwitchRepository.findByAssetId(assetId).orElseThrow(() -> new AssetNotFoundException("Core Switch details not found"));
+                CoreSwitch coreSwitch = coreSwitchRepository.findByAssetId(assetId).orElseThrow(() -> new AssetNotFoundException(CORE_SWITCH_DETAILS_NOT_FOUND));
                 if (request.getName() != null) coreSwitch.setName(request.getName());
                 return toCoreSwitchDto(coreSwitchRepository.save(coreSwitch));
             case FDH:
-                Fdh fdh = fdhRepository.findByAssetId(assetId).orElseThrow(() -> new AssetNotFoundException("FDH details not found"));
+                Fdh fdh = fdhRepository.findByAssetId(assetId).orElseThrow(() -> new AssetNotFoundException(FDH_DETAILS_NOT_FOUND));
                 if (request.getName() != null) fdh.setName(request.getName());
                 if (request.getRegion() != null) fdh.setRegion(request.getRegion());
                 return toFdhDto(fdhRepository.save(fdh));
             case SPLITTER:
-                Splitter splitter = splitterRepository.findByAssetId(assetId).orElseThrow(() -> new AssetNotFoundException("Splitter details not found"));
+                Splitter splitter = splitterRepository.findByAssetId(assetId).orElseThrow(() -> new AssetNotFoundException(SPLITTER_DETAILS_NOT_FOUND));
                 if (request.getNeighborhood() != null) splitter.setNeighborhood(request.getNeighborhood());
                 if (request.getPortCapacity() != null) splitter.setPortCapacity(request.getPortCapacity());
                 return toSplitterDto(splitterRepository.save(splitter));
-            case ONT:
-            case ROUTER:
-            case FIBER_ROLL:
-                // For CPE, only common fields are updated, so just return the asset response
-                return assetService.mapToAssetResponse(asset);
+            // --- Sonar: Grouped cases with same logic (S131) ---
+            case ONT, ROUTER, FIBER_ROLL:
+                return mapToAssetResponse(asset);
             default:
                 throw new IllegalArgumentException("Unsupported asset type for update: " + asset.getAssetType());
         }
     }
 
-    // ... (Other existing methods)
     public List<HeadendDto> getAllHeadends() {
-        return headendRepository.findAll().stream().map(this::toHeadendDto).collect(Collectors.toList());
+        return headendRepository.findAll().stream().map(this::toHeadendDto).toList();
     }
 
     public List<CoreSwitchDto> getAllCoreSwitches() {
-        return coreSwitchRepository.findAll().stream().map(this::toCoreSwitchDto).collect(Collectors.toList());
+        return coreSwitchRepository.findAll().stream().map(this::toCoreSwitchDto).toList();
     }
 
     public List<FdhDto> getAllFdhs() {
-        return fdhRepository.findAll().stream().map(this::toFdhDto).collect(Collectors.toList());
+        return fdhRepository.findAll().stream().map(this::toFdhDto).toList();
     }
 
     public List<SplitterDto> getAllSplitters() {
-        return splitterRepository.findAll().stream().map(this::toSplitterDto).collect(Collectors.toList());
+        return splitterRepository.findAll().stream().map(this::toSplitterDto).toList();
     }
 
     @Transactional
     public CoreSwitchDto reparentCoreSwitch(Long coreSwitchId, Long newHeadendId) {
         CoreSwitch coreSwitch = coreSwitchRepository.findById(coreSwitchId)
-                .orElseThrow(() -> new AssetNotFoundException("Core Switch not found with ID: " + coreSwitchId));
+                .orElseThrow(() -> new AssetNotFoundException(String.format(CORE_SWITCH_NOT_FOUND_ID, coreSwitchId)));
         if (!headendRepository.existsById(newHeadendId)) {
-            throw new AssetNotFoundException("New Headend not found with ID: " + newHeadendId);
+            throw new AssetNotFoundException(String.format(HEADEND_NOT_FOUND_ID, newHeadendId));
         }
         coreSwitch.setHeadendId(newHeadendId);
-        CoreSwitch updatedCoreSwitch = coreSwitchRepository.save(coreSwitch);
-        return toCoreSwitchDto(updatedCoreSwitch);
+        return toCoreSwitchDto(coreSwitchRepository.save(coreSwitch));
     }
 
     @Transactional
     public FdhDto reparentFdh(Long fdhId, Long newCoreSwitchId) {
         Fdh fdh = fdhRepository.findById(fdhId)
-                .orElseThrow(() -> new AssetNotFoundException("FDH not found with ID: " + fdhId));
+                .orElseThrow(() -> new AssetNotFoundException(String.format(FDH_NOT_FOUND_ID, fdhId)));
         if (!coreSwitchRepository.existsById(newCoreSwitchId)) {
-            throw new AssetNotFoundException("New Core Switch not found with ID: " + newCoreSwitchId);
+            throw new AssetNotFoundException(String.format(CORE_SWITCH_NOT_FOUND_ID, newCoreSwitchId));
         }
         fdh.setCoreSwitchId(newCoreSwitchId);
-        Fdh updatedFdh = fdhRepository.save(fdh);
-        return toFdhDto(updatedFdh);
+        return toFdhDto(fdhRepository.save(fdh));
     }
 
     @Transactional
     public SplitterDto reparentSplitter(Long splitterId, Long newFdhId) {
         Splitter splitter = splitterRepository.findById(splitterId)
-                .orElseThrow(() -> new AssetNotFoundException("Splitter not found with ID: " + splitterId));
+                .orElseThrow(() -> new AssetNotFoundException(String.format(SPLITTER_NOT_FOUND_ID, splitterId)));
         if (!fdhRepository.existsById(newFdhId)) {
-            throw new AssetNotFoundException("New FDH not found with ID: " + newFdhId);
+            throw new AssetNotFoundException(String.format(FDH_NOT_FOUND_ID, newFdhId));
         }
         splitter.setFdhId(newFdhId);
-        Splitter updatedSplitter = splitterRepository.save(splitter);
-        return toSplitterDto(updatedSplitter);
+        return toSplitterDto(splitterRepository.save(splitter));
+    }
+
+    // --- Sonar: Helper to remove duplicated code from create... methods ---
+    private Asset prepareAssetRequest(AssetCreateRequest request, String defaultModel, String serialPrefix) {
+        String serialNumber = StringUtils.hasText(request.getSerialNumber())
+                ? request.getSerialNumber()
+                : (StringUtils.hasText(request.getName()) ? request.getName() : serialPrefix + System.currentTimeMillis());
+        request.setSerialNumber(serialNumber);
+
+        String model = StringUtils.hasText(request.getModel()) ? request.getModel() : defaultModel;
+        request.setModel(model);
+
+        AssetResponse assetResponse = assetService.createAsset(request);
+        return assetRepository.findById(assetResponse.getId())
+                .orElseThrow(() -> new AssetNotFoundException(ASSET_CREATE_HIERARCHY_FAIL));
     }
 
     @Transactional
     public HeadendDto createHeadend(AssetCreateRequest request) {
-        String serialNumber = StringUtils.hasText(request.getSerialNumber()) ? request.getSerialNumber() : request.getName();
-        request.setSerialNumber(serialNumber);
-        String model = StringUtils.hasText(request.getModel()) ? request.getModel() : "Infrastructure";
-        request.setModel(model);
-
-        AssetResponse assetResponse = assetService.createAsset(request);
-        Asset asset = assetRepository.findById(assetResponse.getId()).orElseThrow(() -> new AssetNotFoundException("Failed to create asset during hierarchy setup"));
+        Asset asset = prepareAssetRequest(request, MODEL_INFRASTRUCTURE, "HEADEND-");
 
         Headend headend = new Headend();
         headend.setAsset(asset);
         headend.setName(request.getName());
         headend.setLocation(request.getLocation());
-        Headend savedHeadend = headendRepository.save(headend);
-        return toHeadendDto(savedHeadend);
+        return toHeadendDto(headendRepository.save(headend));
     }
 
     @Transactional
     public CoreSwitchDto createCoreSwitch(AssetCreateRequest request) {
-        String serialNumber = StringUtils.hasText(request.getSerialNumber()) ? request.getSerialNumber() : request.getName();
-        request.setSerialNumber(serialNumber);
-        String model = StringUtils.hasText(request.getModel()) ? request.getModel() : "Core Infrastructure";
-        request.setModel(model);
-
-        AssetResponse assetResponse = assetService.createAsset(request);
-        Asset asset = assetRepository.findById(assetResponse.getId()).orElseThrow(() -> new AssetNotFoundException("Failed to create asset during hierarchy setup"));
+        Asset asset = prepareAssetRequest(request, MODEL_CORE_INFRASTRUCTURE, "CS-");
 
         CoreSwitch coreSwitch = new CoreSwitch();
         coreSwitch.setAsset(asset);
         coreSwitch.setName(request.getName());
         coreSwitch.setLocation(request.getLocation());
         coreSwitch.setHeadendId(request.getHeadendId());
-        CoreSwitch savedCoreSwitch = coreSwitchRepository.save(coreSwitch);
-        return toCoreSwitchDto(savedCoreSwitch);
+        return toCoreSwitchDto(coreSwitchRepository.save(coreSwitch));
     }
 
     @Transactional
     public FdhDto createFdh(AssetCreateRequest request) {
-        String serialNumber = StringUtils.hasText(request.getSerialNumber()) ? request.getSerialNumber() : request.getName();
-        request.setSerialNumber(serialNumber);
-        String model = StringUtils.hasText(request.getModel()) ? request.getModel() : "Infrastructure";
-        request.setModel(model);
-
-        AssetResponse assetResponse = assetService.createAsset(request);
-        Asset asset = assetRepository.findById(assetResponse.getId()).orElseThrow(() -> new AssetNotFoundException("Failed to create asset during hierarchy setup"));
+        Asset asset = prepareAssetRequest(request, MODEL_INFRASTRUCTURE, "FDH-");
 
         Fdh fdh = new Fdh();
         fdh.setAsset(asset);
         fdh.setName(request.getName());
         fdh.setRegion(request.getRegion());
         fdh.setCoreSwitchId(request.getCoreSwitchId());
-        Fdh savedFdh = fdhRepository.save(fdh);
-        return toFdhDto(savedFdh);
+        return toFdhDto(fdhRepository.save(fdh));
     }
 
     @Transactional
     public SplitterDto createSplitter(AssetCreateRequest request) {
-        String serialNumber = StringUtils.hasText(request.getSerialNumber()) 
-            ? request.getSerialNumber() 
-            : "SPLITTER-" + request.getFdhId() + "-" + System.currentTimeMillis();
-        request.setSerialNumber(serialNumber);
+        String defaultModel = (request.getPortCapacity() != null)
+                ? request.getPortCapacity() + "-Port Splitter"
+                : "Splitter";
+        String serialPrefix = "SPLITTER-" + request.getFdhId() + "-";
 
-        String model = StringUtils.hasText(request.getModel()) 
-            ? request.getModel() 
-            : request.getPortCapacity() + "-Port Splitter";
-        request.setModel(model);
-
-        AssetResponse assetResponse = assetService.createAsset(request);
-        Asset asset = assetRepository.findById(assetResponse.getId()).orElseThrow(() -> new AssetNotFoundException("Failed to create asset during hierarchy setup"));
+        Asset asset = prepareAssetRequest(request, defaultModel, serialPrefix);
 
         Splitter splitter = new Splitter();
         splitter.setAsset(asset);
@@ -205,54 +206,88 @@ public class NetworkHierarchyService {
         splitter.setPortCapacity(request.getPortCapacity());
         splitter.setUsedPorts(0);
         splitter.setNeighborhood(request.getNeighborhood());
-        Splitter savedSplitter = splitterRepository.save(splitter);
-        return toSplitterDto(savedSplitter);
+        return toSplitterDto(splitterRepository.save(splitter));
     }
 
     @Transactional
     public SplitterDto updateSplitterUsedPorts(Long id, SplitterUpdateRequest request) {
-        Splitter splitter = splitterRepository.findById(id).orElseThrow(() -> new AssetNotFoundException("Splitter not found"));
+        Splitter splitter = splitterRepository.findById(id)
+                .orElseThrow(() -> new AssetNotFoundException(SPLITTER_NOT_FOUND));
         splitter.setUsedPorts(request.getUsedPorts());
         return toSplitterDto(splitterRepository.save(splitter));
     }
 
     public HeadendDto getHeadendDetails(Long id) {
-        Headend headend = headendRepository.findById(id).orElseThrow(() -> new AssetNotFoundException("Headend not found"));
+        Headend headend = headendRepository.findById(id)
+                .orElseThrow(() -> new AssetNotFoundException(String.format(HEADEND_NOT_FOUND_ID, id)));
         return toHeadendDto(headend);
     }
 
     public CoreSwitchDto getCoreSwitchDetails(Long id) {
-        CoreSwitch coreSwitch = coreSwitchRepository.findById(id).orElseThrow(() -> new AssetNotFoundException("Core Switch not found"));
+        CoreSwitch coreSwitch = coreSwitchRepository.findById(id)
+                .orElseThrow(() -> new AssetNotFoundException(String.format(CORE_SWITCH_NOT_FOUND_ID, id)));
         return toCoreSwitchDto(coreSwitch);
     }
 
     public FdhDto getFdhDetails(Long id) {
-        Fdh fdh = fdhRepository.findById(id).orElseThrow(() -> new AssetNotFoundException("FDH not found"));
+        Fdh fdh = fdhRepository.findById(id)
+                .orElseThrow(() -> new AssetNotFoundException(String.format(FDH_NOT_FOUND_ID, id)));
         return toFdhDto(fdh);
     }
 
     public SplitterDto getSplitterDetails(Long id) {
-        Splitter splitter = splitterRepository.findById(id).orElseThrow(() -> new AssetNotFoundException("Splitter not found"));
+        Splitter splitter = splitterRepository.findById(id)
+                .orElseThrow(() -> new AssetNotFoundException(String.format(SPLITTER_NOT_FOUND_ID, id)));
         return toSplitterDto(splitter);
     }
 
     public List<SplitterDto> getSplittersByFdh(Long fdhId) {
-        return splitterRepository.findByFdhId(fdhId).stream().map(this::toSplitterDto).collect(Collectors.toList());
+        return splitterRepository.findByFdhId(fdhId).stream().map(this::toSplitterDto).toList();
     }
 
+    /**
+     * --- Sonar: Refactored to fix N+1 performance issue ---
+     * This method now loads all child data in bulk instead of in a loop.
+     */
     @Transactional(readOnly = true)
     public HeadendTopologyDto getHeadendTopology(Long headendId) {
         Headend headend = headendRepository.findById(headendId)
-                .orElseThrow(() -> new AssetNotFoundException("Headend not found with ID: " + headendId));
-        HeadendTopologyDto headendDto = toHeadendTopologyDto(headend);
+                .orElseThrow(() -> new AssetNotFoundException(String.format(HEADEND_NOT_FOUND_ID, headendId)));
 
-        List<CoreSwitchTopologyDto> coreSwitches = coreSwitchRepository.findAllByHeadendId(headendId).stream()
-                .map(this::toCoreSwitchTopologyDto)
-                .collect(Collectors.toList());
-        headendDto.setCoreSwitches(coreSwitches);
+        // 1. Fetch all core switches for this headend
+        List<CoreSwitch> coreSwitches = coreSwitchRepository.findAllByHeadendId(headendId);
+        if (coreSwitches.isEmpty()) {
+            return toHeadendTopologyDto(headend, Collections.emptyList()); // No children, return early
+        }
+        List<Long> coreSwitchIds = coreSwitches.stream().map(CoreSwitch::getId).toList();
 
-        return headendDto;
+        // 2. Fetch all FDHs for all core switches in one query
+        List<Fdh> fdhs = fdhRepository.findAllByCoreSwitchIdIn(coreSwitchIds);
+        Map<Long, List<Fdh>> fdhsByCoreSwitchId = fdhs.stream()
+                .collect(Collectors.groupingBy(Fdh::getCoreSwitchId));
+
+        // 3. Fetch all Splitters for all FDHs in one query
+        List<Long> fdhIds = fdhs.stream().map(Fdh::getId).toList();
+        if (fdhIds.isEmpty()) {
+            // No FDHs, but we still need to build the CoreSwitch DTOs
+            return toHeadendTopologyDto(headend, coreSwitches.stream()
+                    .map(cs -> toCoreSwitchTopologyDto(cs, Collections.emptyList(), Collections.emptyMap()))
+                    .toList());
+        }
+
+        List<Splitter> splitters = splitterRepository.findByFdhIdIn(fdhIds);
+        Map<Long, List<Splitter>> splittersByFdhId = splitters.stream()
+                .collect(Collectors.groupingBy(Splitter::getFdhId));
+
+        // 4. Build the DTOs using the pre-fetched maps
+        List<CoreSwitchTopologyDto> coreSwitchDtos = coreSwitches.stream()
+                .map(cs -> toCoreSwitchTopologyDto(cs, fdhsByCoreSwitchId.getOrDefault(cs.getId(), Collections.emptyList()), splittersByFdhId))
+                .toList();
+
+        return toHeadendTopologyDto(headend, coreSwitchDtos);
     }
+
+    // --- Mappers ---
 
     private HeadendDto toHeadendDto(Headend headend) {
         HeadendDto dto = new HeadendDto();
@@ -306,37 +341,55 @@ public class NetworkHierarchyService {
         return dto;
     }
 
-    private HeadendTopologyDto toHeadendTopologyDto(Headend headend) {
+    // --- Topology Mappers (Refactored for N+1 Fix) ---
+
+    private HeadendTopologyDto toHeadendTopologyDto(Headend headend, List<CoreSwitchTopologyDto> coreSwitches) {
         HeadendTopologyDto dto = new HeadendTopologyDto();
         dto.setId(headend.getId());
         dto.setName(headend.getName());
         dto.setLocation(headend.getLocation());
+        dto.setCoreSwitches(coreSwitches); // Set the pre-built list
         return dto;
     }
 
-    private CoreSwitchTopologyDto toCoreSwitchTopologyDto(CoreSwitch coreSwitch) {
+    private CoreSwitchTopologyDto toCoreSwitchTopologyDto(CoreSwitch coreSwitch, List<Fdh> fdhs, Map<Long, List<Splitter>> splittersByFdhId) {
         CoreSwitchTopologyDto dto = new CoreSwitchTopologyDto();
         dto.setId(coreSwitch.getId());
         dto.setName(coreSwitch.getName());
         dto.setLocation(coreSwitch.getLocation());
         dto.setHeadendId(coreSwitch.getHeadendId());
-        List<FdhTopologyDto> fdhs = fdhRepository.findAllByCoreSwitchId(coreSwitch.getId()).stream()
-                .map(this::toFdhTopologyDto)
-                .collect(Collectors.toList());
-        dto.setFdhs(fdhs);
+
+        List<FdhTopologyDto> fdhDtos = fdhs.stream()
+                .map(fdh -> toFdhTopologyDto(fdh, splittersByFdhId.getOrDefault(fdh.getId(), Collections.emptyList())))
+                .toList();
+        dto.setFdhs(fdhDtos);
         return dto;
     }
 
-    private FdhTopologyDto toFdhTopologyDto(Fdh fdh) {
+    private FdhTopologyDto toFdhTopologyDto(Fdh fdh, List<Splitter> splitters) {
         FdhTopologyDto dto = new FdhTopologyDto();
         dto.setId(fdh.getId());
         dto.setName(fdh.getName());
         dto.setRegion(fdh.getRegion());
         dto.setCoreSwitchId(fdh.getCoreSwitchId());
-        List<SplitterDto> splitters = splitterRepository.findByFdhId(fdh.getId()).stream()
+
+        List<SplitterDto> splitterDtos = splitters.stream()
                 .map(this::toSplitterDto)
-                .collect(Collectors.toList());
-        dto.setSplitters(splitters);
+                .toList();
+        dto.setSplitters(splitterDtos);
         return dto;
+    }
+
+    private AssetResponse mapToAssetResponse(Asset asset) {
+        AssetResponse response = new AssetResponse();
+        response.setId(asset.getId());
+        response.setSerialNumber(asset.getSerialNumber());
+        response.setAssetType(asset.getAssetType());
+        response.setModel(asset.getModel());
+        response.setAssetStatus(asset.getAssetStatus());
+        response.setLocation(asset.getLocation());
+        response.setAssignedToCustomerId(asset.getAssignedToCustomerId());
+        response.setCreatedAt(asset.getCreatedAt());
+        return response;
     }
 }

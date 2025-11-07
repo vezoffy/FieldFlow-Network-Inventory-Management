@@ -1,9 +1,11 @@
 package com.training.customer_service.dtos;
 
 import com.training.customer_service.enums.FiberStatus;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class FiberDropLineResponse {
     private Long id;
     private Long customerId;

@@ -5,7 +5,6 @@ import com.deploymentservice.clients.InventoryClient;
 import com.deploymentservice.clients.CustomerClient;
 import com.deploymentservice.dto.AssetReclaimRequest;
 import com.deploymentservice.dto.TaskCreationRequest;
-import com.deploymentservice.dto.TaskUpdateRequest;
 import com.deploymentservice.dto.TechnicianCreationRequest;
 import com.deploymentservice.entity.DeploymentTask;
 import com.deploymentservice.entity.Technician;
@@ -23,25 +22,35 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Service
-public class DeploymentService {
+public class DeploymentService implements DeploymentServiceInterface {
+
+    private final DeploymentTaskRepository deploymentTaskRepository;
+
+    private final TechnicianRepository technicianRepository;
+
+    private final AuditLogService auditLogService;
+
+    private final CustomerClient customerClient;
+
+    private final InventoryClient inventoryClient;
+
+    private final AuthClient authClient;
 
     @Autowired
-    private DeploymentTaskRepository deploymentTaskRepository;
-
-    @Autowired
-    private TechnicianRepository technicianRepository;
-
-    @Autowired
-    private AuditLogService auditLogService;
-
-    @Autowired
-    private CustomerClient customerClient;
-
-    @Autowired
-    private InventoryClient inventoryClient;
-
-    @Autowired
-    private AuthClient authClient;
+    public DeploymentService(DeploymentTaskRepository deploymentTaskRepository,
+                             TechnicianRepository technicianRepository,
+                             AuditLogService auditLogService,
+                             CustomerClient customerClient,
+                             InventoryClient inventoryClient,
+                             AuthClient authClient)
+    {
+        this.deploymentTaskRepository = deploymentTaskRepository;
+        this.technicianRepository = technicianRepository;
+        this.auditLogService = auditLogService;
+        this.customerClient = customerClient;
+        this.inventoryClient = inventoryClient;
+        this.authClient = authClient;
+    }
 
     @Transactional
     public Mono<Technician> createTechnician(TechnicianCreationRequest request, String adminUserId) {

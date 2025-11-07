@@ -1,9 +1,11 @@
 package com.deploymentservice.dto;
 
 import com.deploymentservice.enums.TaskStatus;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class TaskUpdateRequest {
     private TaskStatus status;
     private String notes;

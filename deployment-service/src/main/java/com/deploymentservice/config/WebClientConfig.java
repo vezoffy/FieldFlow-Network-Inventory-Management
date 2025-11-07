@@ -9,7 +9,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 @Configuration
 public class WebClientConfig {

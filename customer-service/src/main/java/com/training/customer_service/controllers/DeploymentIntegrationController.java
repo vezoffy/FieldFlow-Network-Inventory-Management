@@ -1,6 +1,7 @@
 package com.training.customer_service.controllers;
 
 import com.training.customer_service.service.CustomerService;
+import com.training.customer_service.service.CustomerServiceInterface;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/customers")
 public class DeploymentIntegrationController {
 
+    private final CustomerServiceInterface customerService;
+
     @Autowired
-    private CustomerService customerService;
+    public DeploymentIntegrationController(CustomerServiceInterface customerService) {
+        this.customerService = customerService;
+    }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPPORT_AGENT', 'TECHNICIAN')") // Secured for internal system calls

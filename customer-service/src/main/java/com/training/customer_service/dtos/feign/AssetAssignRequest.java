@@ -1,8 +1,10 @@
 package com.training.customer_service.dtos.feign;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class AssetAssignRequest {
     private Long customerId;
 }

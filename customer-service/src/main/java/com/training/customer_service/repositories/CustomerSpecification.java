@@ -4,7 +4,15 @@ import com.training.customer_service.entities.Customer;
 import com.training.customer_service.enums.CustomerStatus;
 import org.springframework.data.jpa.domain.Specification;
 
-public class CustomerSpecification {
+// Best practice: Also make the class 'final'
+public final class CustomerSpecification {
+
+    // --- SONARQUBE FIX ---
+    // Add a private constructor to hide the implicit public one
+    // and prevent instantiation.
+    private CustomerSpecification() {
+        // This constructor is private and intentionally empty
+    }
 
     public static Specification<Customer> isAnything() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();

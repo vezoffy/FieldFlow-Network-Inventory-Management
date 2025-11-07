@@ -14,8 +14,12 @@ import UserManagement from './pages/UserManagement';
 import DeploymentTasks from './pages/DeploymentTasks';
 import DeactivateCustomer from './pages/DeactivateCustomer';
 import AuditLogs from './pages/AuditLogs';
+import ReplaceAssets from './pages/ReplaceAssets';
+import Onboarding from './pages/Onboarding';
+import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './context/AuthContext';
 import ColorModeProvider from './context/ColorModeContext';
+import ChatWidget from './components/ChatWidget';
 
 function App() {
   return (
@@ -35,9 +39,13 @@ function App() {
             <Route path="/admin/users" element={<UserManagement />} />
             <Route path="/tasks" element={<DeploymentTasks />} />
             <Route path="/deactivate-customer" element={<DeactivateCustomer />} />
+            <Route path="/replace-assets" element={<ReplaceAssets />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/audit-logs" element={<AuditLogs />} />
             <Route path="/" element={<LandingPage />} />
           </Routes>
+          <ChatWidget />
         </BrowserRouter>
       </AuthProvider>
     </ColorModeProvider>

@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 
 import java.security.Key;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class JwtReactiveAuthenticationManager implements ReactiveAuthenticationManager {
@@ -40,7 +39,7 @@ public class JwtReactiveAuthenticationManager implements ReactiveAuthenticationM
 
                         List<SimpleGrantedAuthority> authorities = roles.stream()
                                 .map(SimpleGrantedAuthority::new)
-                                .collect(Collectors.toList());
+                                .toList();
 
                         UsernamePasswordAuthenticationToken authenticatedToken = new UsernamePasswordAuthenticationToken(username, null, authorities);
                         // CRITICAL: Store the raw JWT in the details for propagation

@@ -1,10 +1,12 @@
 package com.deploymentservice.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
-@Data
+@Getter
+@Setter
 public class TaskCreationRequest {
     private Long customerId;
     private Long technicianId;

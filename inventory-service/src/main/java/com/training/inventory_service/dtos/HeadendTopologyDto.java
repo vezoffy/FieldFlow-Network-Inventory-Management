@@ -1,10 +1,12 @@
 package com.training.inventory_service.dtos;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class HeadendTopologyDto {
     private Long id;
     private String name;

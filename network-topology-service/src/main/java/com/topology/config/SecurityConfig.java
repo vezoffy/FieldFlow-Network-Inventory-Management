@@ -13,14 +13,18 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtReactiveAuthenticationManager authenticationManager;
+    private final JwtReactiveAuthenticationManager authenticationManager;
+
+    private final ServerHttpBearerAuthenticationConverter converter;
+
+    private final UnauthorizedAuthenticationEntryPoint entryPoint;
 
     @Autowired
-    private ServerHttpBearerAuthenticationConverter converter;
-
-    @Autowired
-    private UnauthorizedAuthenticationEntryPoint entryPoint;
+    public SecurityConfig(JwtReactiveAuthenticationManager authenticationManager, ServerHttpBearerAuthenticationConverter converter, UnauthorizedAuthenticationEntryPoint entryPoint) {
+        this.authenticationManager = authenticationManager;
+        this.converter = converter;
+        this.entryPoint = entryPoint;
+    }
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) { // Correct method signature

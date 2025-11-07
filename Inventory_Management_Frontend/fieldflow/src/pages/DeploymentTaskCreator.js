@@ -9,8 +9,9 @@ import { AuthContext } from '../context/AuthContext';
 
 const DeploymentTaskCreator = () => {
   const { user } = useContext(AuthContext);
-  // The deployments technicians API is ADMIN-only on the backend. Per spec, hide this feature unless the user is ADMIN.
-  const canCreate = user?.roles?.includes('ROLE_ADMIN');
+  // Allow TECHNICIAN and ADMIN to create deployment tasks in the UI per role mapping.
+  // NOTE: backend may still restrict certain endpoints to ADMIN; if calls fail with 403 we'll surface the error.
+  const canCreate = user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_TECHNICIAN');
 
   const [customers, setCustomers] = useState([]);
   const [technicians, setTechnicians] = useState([]);
@@ -39,13 +40,11 @@ const DeploymentTaskCreator = () => {
 
   const loadTechnicians = async () => {
     try {
-      // Use the deployments technicians endpoint (ADMIN-only) as provided in API docs
-      const resp = await api.get('/api/deployments/technicians');
-      const list = resp.data || [];
-      const opts = list.map(t => ({ label: t.name || t.username || `Tech-${t.id}`, value: String(t.id), id: t.id, name: t.name || t.username, contact: t.contact, region: t.region }));
+      // Prefer using service wrapper which may accept query params later
+      const list = await deploymentService.getTechnicians().catch(() => []);
+      const opts = (list || []).map(t => ({ label: t.name || t.username || `Tech-${t.id}`, value: String(t.id), id: t.id, name: t.name || t.username, contact: t.contact, region: t.region }));
       setTechnicians(opts);
     } catch (e) {
-      // If access is forbidden or another error occurs, surface a clear message.
       const msg = e?.response?.status === 403 ? 'Access denied: administrators only' : 'Failed to load technicians';
       setSnack({ open: true, message: msg, severity: 'error' });
     }

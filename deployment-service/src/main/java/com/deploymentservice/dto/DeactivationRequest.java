@@ -1,8 +1,10 @@
 package com.deploymentservice.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class DeactivationRequest {
     private String reason;
 }

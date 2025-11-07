@@ -5,7 +5,6 @@ import com.aiservice.dto.ChatResponse;
 import com.aiservice.service.AiChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,8 +16,12 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/ai")
 public class AiController {
 
+    private final AiChatService aiChatService;
+
     @Autowired
-    private AiChatService aiChatService;
+    public AiController(AiChatService aiChatService) {
+        this.aiChatService = aiChatService;
+    }
 
     @PostMapping("/chat")
     public Mono<ResponseEntity<ChatResponse>> chat(@RequestBody ChatRequest chatRequest) {

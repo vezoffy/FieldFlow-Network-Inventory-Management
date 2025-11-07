@@ -1,8 +1,10 @@
 package com.topology.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class HeadendDto {
     private Long id;
     private String name;

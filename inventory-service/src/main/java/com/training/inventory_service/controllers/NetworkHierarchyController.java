@@ -2,6 +2,7 @@ package com.training.inventory_service.controllers;
 
 import com.training.inventory_service.dtos.*;
 import com.training.inventory_service.services.NetworkHierarchyService;
+import com.training.inventory_service.services.NetworkHierarchyServiceInterface;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,12 @@ import java.util.List;
 @RequestMapping("/api/inventory")
 public class NetworkHierarchyController {
 
-    @Autowired
-    private NetworkHierarchyService networkHierarchyService;
+    private final NetworkHierarchyServiceInterface networkHierarchyService;
 
+    @Autowired
+    public NetworkHierarchyController(NetworkHierarchyService networkHierarchyService) {
+        this.networkHierarchyService = networkHierarchyService;
+    }
     // --- List All Endpoints ---
 
     @GetMapping("/headends")

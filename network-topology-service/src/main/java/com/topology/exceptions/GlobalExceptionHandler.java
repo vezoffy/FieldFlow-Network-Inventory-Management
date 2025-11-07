@@ -8,6 +8,7 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@RestControllerAdvice
 @Component
 @Order(-2) // Ensure this handler is prioritized
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
@@ -32,10 +34,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String errorMessage = "An unexpected error occurred";
 
-        if (ex instanceof DeviceNotAssignedException) {
-            status = HttpStatus.NOT_FOUND;
-            errorMessage = ex.getMessage();
-        } else if (ex instanceof CustomerInactiveException) {
+        if (ex instanceof DeviceNotAssignedException || ex instanceof CustomerInactiveException) {
             status = HttpStatus.NOT_FOUND;
             errorMessage = ex.getMessage();
         } else if (ex instanceof TopologyServiceException) {

@@ -1,9 +1,11 @@
 package com.training.inventory_service.dtos;
 
 import com.training.inventory_service.enums.AssetType;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class AssetAssignmentDetailsDto {
     private Long assetId; // Added to hold the ID of the current asset
     private Long customerId; // Null if not assigned to a customer

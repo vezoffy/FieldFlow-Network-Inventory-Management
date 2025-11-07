@@ -6,7 +6,9 @@ import com.deploymentservice.entity.DeploymentTask;
 import com.deploymentservice.entity.Technician;
 import com.deploymentservice.repository.AuditLogRepository;
 import com.deploymentservice.service.AuditLogService;
+import com.deploymentservice.service.AuditLogServiceInterface;
 import com.deploymentservice.service.DeploymentService;
+import com.deploymentservice.service.DeploymentServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +24,16 @@ import java.time.Instant;
 @RequestMapping("/api/deployments")
 public class DeploymentController {
 
-    @Autowired
-    private DeploymentService deploymentService;
+    private final DeploymentServiceInterface deploymentService;
+    private final AuditLogServiceInterface auditLogService;
 
     @Autowired
-    private AuditLogService auditLogService;
-
-    @Autowired
-    private AuditLogRepository auditLogRepository;
+    public DeploymentController(DeploymentService deploymentService,
+                                AuditLogService auditLogService,
+                                AuditLogRepository auditLogRepository) {
+        this.deploymentService = deploymentService;
+        this.auditLogService = auditLogService;
+    }
 
     private Mono<String> getAuthenticatedUserId() {
         return ReactiveSecurityContextHolder.getContext()

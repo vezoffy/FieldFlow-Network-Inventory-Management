@@ -1,8 +1,10 @@
 package com.training.inventory_service.dtos;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class FdhDto {
     private Long id;
     private String name;

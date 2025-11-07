@@ -1,6 +1,5 @@
 package com.aiservice.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -15,17 +14,15 @@ import org.springframework.security.web.server.authentication.AuthenticationWebF
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
-
-    @Autowired
-    private JwtAuthenticationManager jwtAuthenticationManager;
-
-    @Autowired
-    private JwtAuthenticationConverter jwtAuthenticationConverter;
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+    // --- SONAR FIX: Injected dependencies directly into the @Bean method ---
+    public SecurityWebFilterChain securityWebFilterChain(
+            ServerHttpSecurity http,
+            AuthEntryPointJwt unauthorizedHandler,
+            JwtAuthenticationManager jwtAuthenticationManager,
+            JwtAuthenticationConverter jwtAuthenticationConverter
+    ) {
         AuthenticationWebFilter authenticationWebFilter = new AuthenticationWebFilter(jwtAuthenticationManager);
         authenticationWebFilter.setServerAuthenticationConverter(jwtAuthenticationConverter);
 

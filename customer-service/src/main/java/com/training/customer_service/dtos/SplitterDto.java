@@ -1,8 +1,10 @@
 package com.training.customer_service.dtos;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class SplitterDto {
     private Long id;
     private Long fdhId;

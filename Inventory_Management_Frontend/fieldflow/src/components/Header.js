@@ -22,6 +22,7 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import PeopleIcon from '@mui/icons-material/People';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -105,7 +106,7 @@ const Header = () => {
                   </MenuItem>
                 )}
 
-                {user.roles?.includes('ROLE_ADMIN') && (
+                {(user.roles?.includes('ROLE_ADMIN') || user.roles?.includes('ROLE_PLANNER')) && (
                   <MenuItem component={RouterLink} to="/topology-editor" onClick={handleClose}>
                     <ListItemIcon>
                       <SwapHorizIcon fontSize="small" />
@@ -123,7 +124,7 @@ const Header = () => {
                   </MenuItem>
                 )}
 
-                {user.roles?.includes('ROLE_PLANNER') && (
+                {(user.roles?.includes('ROLE_PLANNER') || user.roles?.includes('ROLE_ADMIN')) && (
                   <MenuItem component={RouterLink} to="/onboarding" onClick={handleClose}>
                     <ListItemIcon>
                       <AutoFixHighIcon fontSize="small" />
@@ -150,8 +151,8 @@ const Header = () => {
                   </MenuItem>
                 )}
 
-                {/* Inventory dashboard link - visible to Planner, Admin, Support */}
-                {(user.roles?.includes('ROLE_PLANNER') || user.roles?.includes('ROLE_ADMIN') || user.roles?.includes('ROLE_SUPPORT_AGENT')) && (
+                {/* Inventory dashboard link - visible to Planner, Admin, Technician */}
+                {(user.roles?.includes('ROLE_PLANNER') || user.roles?.includes('ROLE_ADMIN') || user.roles?.includes('ROLE_TECHNICIAN')) && (
                   <MenuItem component={RouterLink} to="/inventory" onClick={handleClose}>
                     <ListItemIcon>
                       <Inventory2Icon fontSize="small" />
@@ -160,7 +161,7 @@ const Header = () => {
                   </MenuItem>
                 )}
 
-                {(user.roles?.includes('ROLE_PLANNER') || user.roles?.includes('ROLE_ADMIN') || user.roles?.includes('ROLE_SUPPORT_AGENT')) && (
+                {(user.roles?.includes('ROLE_PLANNER') || user.roles?.includes('ROLE_ADMIN') || user.roles?.includes('ROLE_SUPPORT_AGENT') || user.roles?.includes('ROLE_TECHNICIAN')) && (
                   <MenuItem component={RouterLink} to="/customers" onClick={handleClose}>
                     <ListItemIcon>
                       <PeopleIcon fontSize="small" />
@@ -178,7 +179,16 @@ const Header = () => {
                   </MenuItem>
                 )}
 
-                {user.roles?.includes('ROLE_ADMIN') && (
+                {(user.roles?.includes('ROLE_TECHNICIAN') || user.roles?.includes('ROLE_ADMIN')) && (
+                  <MenuItem component={RouterLink} to="/replace-assets" onClick={handleClose}>
+                    <ListItemIcon>
+                      <SyncAltIcon fontSize="small" />
+                    </ListItemIcon>
+                    Replace Asset
+                  </MenuItem>
+                )}
+
+                {(user.roles?.includes('ROLE_ADMIN') || user.roles?.includes('ROLE_TECHNICIAN')) && (
                   <MenuItem component={RouterLink} to="/deployments/new" onClick={handleClose}>
                     <ListItemIcon>
                       <BuildIcon fontSize="small" />
@@ -188,12 +198,14 @@ const Header = () => {
                 )}
 
                 {/* Network Topology - visible to all logged in users */}
-                <MenuItem component={RouterLink} to="/topology" onClick={handleClose}>
-                  <ListItemIcon>
-                    <AccountTreeIcon fontSize="small" />
-                  </ListItemIcon>
-                  Network Topology
-                </MenuItem>
+                {(user.roles?.includes('ROLE_ADMIN') || user.roles?.includes('ROLE_PLANNER')) && (
+                  <MenuItem component={RouterLink} to="/topology" onClick={handleClose}>
+                    <ListItemIcon>
+                      <AccountTreeIcon fontSize="small" />
+                    </ListItemIcon>
+                    Network Topology
+                  </MenuItem>
+                )}
 
                 <MenuItem
                   onClick={() => {

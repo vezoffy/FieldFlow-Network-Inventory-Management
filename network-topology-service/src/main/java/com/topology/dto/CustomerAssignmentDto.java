@@ -1,10 +1,12 @@
 package com.topology.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class CustomerAssignmentDto {
     private Long customerId;
     private String name;

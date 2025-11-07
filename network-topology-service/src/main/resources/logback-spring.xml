@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- Appender to log to a centralized file -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>C:/Users/riteshmishra.a/Downloads/Inventory_Management/Inventory-Management-Logs/network-topology-service.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>C:/Users/riteshmishra.a/Downloads/Inventory_Management/Inventory-Management-Logs/network-topology-service-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- keep 1 day's worth of history -->
+            <maxHistory>1</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Specific logger for your application packages -->
+    <logger name="com.topology" level="DEBUG" additivity="false">
+        <appender-ref ref="FILE"/>
+    </logger>
+    <logger name="com.topology" level="WARN" additivity="false">
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Root logger configuration: logs everything else at INFO level to FILE -->
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>

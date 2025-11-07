@@ -2,6 +2,7 @@ package com.topology.controllers;
 
 import com.topology.dto.InfrastructurePathResponse;
 import com.topology.services.TopologyService;
+import com.topology.services.TopologyServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +15,12 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/topology/infrastructure")
 public class InfrastructureTopologyController {
 
+    private final TopologyServiceInterface topologyService;
+
     @Autowired
-    private TopologyService topologyService;
+    public InfrastructureTopologyController(TopologyService topologyService) {
+        this.topologyService = topologyService;
+        }
 
     @GetMapping("/{serialNumber}")
     @PreAuthorize("hasAnyRole('ADMIN', 'PLANNER', 'SUPPORT_AGENT')")

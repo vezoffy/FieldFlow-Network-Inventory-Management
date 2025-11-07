@@ -86,7 +86,7 @@ const InventoryDashboard = () => {
   const [assetToDelete, setAssetToDelete] = useState(null);
 
   const roles = user?.roles || [];
-  const canView = roles.some(r => ['ROLE_PLANNER','ROLE_ADMIN','ROLE_SUPPORT_AGENT'].includes(r));
+  const canView = roles.some(r => ['ROLE_PLANNER','ROLE_ADMIN','ROLE_SUPPORT_AGENT','ROLE_TECHNICIAN'].includes(r));
   const canCreate = roles.some(r => ['ROLE_PLANNER','ROLE_ADMIN'].includes(r));
   const canChangeStatus = roles.some(r => ['ROLE_TECHNICIAN','ROLE_ADMIN'].includes(r));
 
