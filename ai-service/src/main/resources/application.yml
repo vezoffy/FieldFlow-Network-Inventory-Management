@@ -21,7 +21,7 @@ eureka:
 # Custom properties for manual bean creation
 google:
   api:
-    key: AIzaSyB6vn9Gh1S4yOpWHEo8O8sHK9gOlztwKAA
+    key: YOUR_GOOGLE_API_KEY
   model:
     name: gemini-2.0-flash-lite
 
